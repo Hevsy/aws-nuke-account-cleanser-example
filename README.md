@@ -1,16 +1,14 @@
-## AWS Account Cleanser framework using aws-nuke
+# AWS Account Cleanser framework using aws-nuke
 
 
-# AWS Nuke is an open source tool created by rebuy.de
+**AWS Nuke is an open source tool created by rebuy.de**
 
-https://github.com/rebuy-de/aws-nuke
+[https://github.com/rebuy-de/aws-nuke](https://github.com/rebuy-de/aws-nuke)
 AWS Nuke searches for deleteable resources in the provided AWS acccount and deletes those which are not considered "Default" or "AWS-Managed"
 In short, it will take your account back to Day1 with few exceptions
 
 
-```sh
-$ First and Final Warning: This is a dangerous and very destructive tool and should not be deployed without fully understanding the impact it will have on the accounts you allow it to interface with.
-```
+> ***First and Final Warning: This is a dangerous and very destructive tool and should not be deployed without fully understanding the impact it will have on the accounts you allow it to interface with***
 
 ## Overview
 
@@ -21,21 +19,21 @@ $ First and Final Warning: This is a dangerous and very destructive tool and sho
 
 * This solution sets up an automated mechanism using the binary aws-nuke along with AWS Step Functions , EventBridge and AWS CodeBuild which can run on a daily scheduled basis to scan and delete the resources from the Sandbox account across each region in a scalable manner. A CodeBuild project is  invoked from the Step Functions map state for each region of an account to delete resources specific to that region, thus providing scalability and better control in terms of time and monitoring efficiency.
 
-    This architecture provides the following features:
+**This architecture provides the following features:**
 
-    1. The workflow is kicked off based off a scheduled event trigger set up in AWS EventBridge which invokes the Step Functions.
-    2. The orchestration of this pattern using Step Functions serves the purpose of handling resources in each region using a separate invocation of CodeBuild Project ( the region attribute in the nuke config  file required by the aws-nuke binary is dynamically updated using a custom python class inside the CodeBuild project )  with the region parameter and the customized nuke config , thus providing dynamic parallelism with the Map state that fans out for all the regions as needed within the sandbox account and thus saves time and provide scalability to handle a lot of resources.
-    3. Generally the aws-nuke command line need to assume STS temporary credentials for handling the resources in each account using IAM Role-chaining which limits it's max time to 60 minutes most of the times and hence if multiple regions are configured to run in one CodeBuild project execution , there could be lot of stale resources still left out without being destroyed.
+1. The workflow is kicked off based off a scheduled event trigger set up in AWS EventBridge which invokes the Step Functions.
+2. The orchestration of this pattern using Step Functions serves the purpose of handling resources in each region using a separate invocation of CodeBuild Project ( the region attribute in the nuke config  file required by the aws-nuke binary is dynamically updated using a custom python class inside the CodeBuild project )  with the region parameter and the customized nuke config , thus providing dynamic parallelism with the Map state that fans out for all the regions as needed within the sandbox account and thus saves time and provide scalability to handle a lot of resources.
+3. Generally the aws-nuke command line need to assume STS temporary credentials for handling the resources in each account using IAM Role-chaining which limits it's max time to 60 minutes most of the times and hence if multiple regions are configured to run in one CodeBuild project execution , there could be lot of stale resources still left out without being destroyed.
         - This pattern takes care of that by executing the clean up for each region in a single account in parallel using the Step Functions Map state.
         - This also uses the credentials for the aws-nuke binary configured with the profile, that can be configured with the shared aws config file ( ~/.aws/config) which doesn't expire with a 1 hour session limit.
         - Also this increases the default CodeBuild project time out to about 2-4 hours , allowing more time for the nuke to complete deleting all resources for each reg   
-    4. The aws-nuke binary works based off the nuke-config.yaml file , which is dynamically updated in this pattern using a python filtering class , to provide flexibility in handling the resource filters and region constraints based on the supplied override parameters.
-    5. This workflow invokes the CodeBuild project synchronously and waits for Success. It also has a retry mechanism to trigger the CodeBuild project again with a configured amount of time , if in case it errors out, making sure all the resources are handled in the daily run without any manual intervention.
-    6. The workflow also sends out a detailed report to an SNS topic subscription on what resources were deleted after the job is successful for each region which simplifies traversing and parsing the complex logs written out by the aws-nuke binary.
+4. The aws-nuke binary works based off the nuke-config.yaml file , which is dynamically updated in this pattern using a python filtering class , to provide flexibility in handling the resource filters and region constraints based on the supplied override parameters.
+5. This workflow invokes the CodeBuild project synchronously and waits for Success. It also has a retry mechanism to trigger the CodeBuild project again with a configured amount of time , if in case it errors out, making sure all the resources are handled in the daily run without any manual intervention.
+6. The workflow also sends out a detailed report to an SNS topic subscription on what resources were deleted after the job is successful for each region which simplifies traversing and parsing the complex logs written out by the aws-nuke binary.
 
 ## Prerequisites 
 
-1. https://github.com/rebuy-de/aws-nuke --> Open source library staged/downloaded to artifactory or S3. This aws-nuke binary is owned by rebuy-de
+1. [https://github.com/rebuy-de/aws-nuke](https://github.com/rebuy-de/aws-nuke) --> Open source library staged/downloaded to artifactory or S3. This aws-nuke binary is owned by rebuy-de
 
 2. AWS Account alias needs to exist in the IAM Dashboard for the target sandbox account for 'aws-nuke' to work
 
