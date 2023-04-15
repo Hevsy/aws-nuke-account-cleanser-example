@@ -1,10 +1,11 @@
 ## AWS Account Cleanser framework using aws-nuke
 
 
-## AWS Nuke is an open source tool created by rebuy.de
-## https://github.com/rebuy-de/aws-nuke
-## AWS Nuke searches for deleteable resources in the provided AWS acccount and deletes those which are not considered "Default" or "AWS-Managed"
-## In short, it will take your account back to Day1 with few exceptions
+# AWS Nuke is an open source tool created by rebuy.de
+
+https://github.com/rebuy-de/aws-nuke
+AWS Nuke searches for deleteable resources in the provided AWS acccount and deletes those which are not considered "Default" or "AWS-Managed"
+In short, it will take your account back to Day1 with few exceptions
 
 
 ```sh
